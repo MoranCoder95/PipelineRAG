@@ -421,8 +421,8 @@
                     Building a complete RAG pipeline with actual GitHub code
                 </p>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-                    <div>
+                <div style="margin-bottom: 2rem;">
+                    <div style="margin-bottom: 3rem;">
                         <h3 style="color: #667eea; margin-bottom: 1rem;">📄 Document Indexing Pipeline</h3>
                         <div class="code-example">
                             <pre><code>from pipeline_data import PipelineData
@@ -443,7 +443,7 @@ pipeline.add_node(VectorStoreNode("data/index.bin", "data/mapping.pkl"),
 
 # Process documents
 pdf_files = ["doc1.pdf", "doc2.pdf"]
-result = pipeline.run(file_paths=pdf_files)<br><br></code></pre>
+result = pipeline.run(file_paths=pdf_files)</code></pre>
                         </div>
                     </div>
                     
