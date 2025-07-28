@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PipelineRAG - Pipeline-Native RAG Development Framework</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 120px 0 80px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Main Content */
+        .main {
+            background: white;
+            margin-top: -50px;
+            border-radius: 30px 30px 0 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section {
+            padding: 80px 0;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: #f8f9ff;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #e1e8ff;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        /* Code Example */
+        .code-example {
+            background: #1e1e1e;
+            border-radius: 15px;
+            padding: 2rem;
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        .code-example pre {
+            color: #d4d4d4;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Architecture Diagram */
+        .architecture {
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .arch-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .arch-component {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            min-width: 150px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .arrow {
+            font-size: 2rem;
+            color: #667eea;
+        }
+
+        /* Footer */
+        .footer {
+            background: #333;
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #667eea;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .arch-diagram {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">PipelineRAG</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#examples">Examples</a></li>
+
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="fade-in">PipelineRAG</h1>
+            <p class="fade-in">A Pipeline-Native Development Framework for Retrieval-Augmented Generation</p>
+            <div class="cta-buttons fade-in">
+                <a href="https://github.com/MoranCoder95/PipelineRAG" class="btn btn-primary">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+                <a href="#features" class="btn btn-secondary">
+                    <i class="fas fa-rocket"></i> Get Started
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Features Section -->
+        <section id="features" class="section">
+            <div class="container">
+                <h2>Why PipelineRAG?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <h3>Modular Design</h3>
+                        <p>Build RAG applications by connecting independent, reusable nodes. Each component has a single responsibility and clear interface.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3>Simplified Development</h3>
+                        <p>Significantly reduces development complexity compared to traditional frameworks. Focus on business logic, not framework intricacies.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <h3>Pipeline-Native</h3>
+                        <p>Built from the ground up using the Pipeline design pattern. Natural fit for RAG workflows with clear data flow.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                        </div>
+                        <h3>Flexible Architecture</h3>
+                        <p>Supports complex DAG structures, conditional routing, and custom components. Easy to extend and customize.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3>Unified Data Flow</h3>
+                        <p>PipelineData provides standardized communication between all components. Consistent, type-safe data handling.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h3>Easy Learning Curve</h3>
+                        <p>Intuitive API design with clear abstractions. Developers report significantly better learning experience compared to traditional frameworks.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Section -->
+        <section id="architecture" class="section" style="background: #f8f9ff;">
+            <div class="container">
+                <h2>Core Architecture</h2>
+                <div class="architecture">
+                    <div class="arch-diagram">
+                        <div class="arch-component">
+                            <i class="fas fa-cube" style="display: block; margin-bottom: 0.5rem; font-size: 2rem;"></i>
+                            <strong>Node</strong><br>
+                            <small>Processing Units</small>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="arch-component">
+                            <i class="fas fa-project-diagram" style="display: block; margin-bottom: 0.5rem; font-size: 2rem;"></i>
+                            <strong>Pipeline</strong><br>
+                            <small>Orchestration Engine</small>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="arch-component">
+                            <i class="fas fa-exchange-alt" style="display: block; margin-bottom: 0.5rem; font-size: 2rem;"></i>
+                            <strong>PipelineData</strong><br>
+                            <small>Data Container</small>
+                        </div>
+                    </div>
+                    <p style="max-width: 800px; margin: 2rem auto; font-size: 1.1rem; color: #666;">
+                        PipelineRAG's architecture centers on three core components that provide the minimal necessary abstractions for building any RAG system. This design eliminates unnecessary complexity while preserving full flexibility for customization.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Examples Section -->
+        <section id="examples" class="section">
+            <div class="container">
+                <h2>Quick Example</h2>
+                <p style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem; color: #666;">
+                    Building a complete RAG pipeline with actual GitHub code
+                </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                    <div>
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">📄 Document Indexing Pipeline</h3>
+                        <div class="code-example">
+                            <pre><code>from pipeline_data import PipelineData
+from pipelines.base import Pipeline
+from nodes.document.pdf_processor import PDFProcessorNode
+from nodes.document.text_splitter import TextSplitterNode
+from nodes.embedding.text_embedding import TextEmbeddingNode
+from nodes.vector.vector_store_node import VectorStoreNode
+
+# Create indexing pipeline
+pipeline = Pipeline()
+pipeline.add_node(PDFProcessorNode(), "pdf_processor", ["File"])
+pipeline.add_node(TextSplitterNode(chunk_size=256, chunk_overlap=50), 
+                  "text_splitter", ["pdf_processor"])
+pipeline.add_node(TextEmbeddingNode(), "text_embedding", ["text_splitter"])
+pipeline.add_node(VectorStoreNode("data/index.bin", "data/mapping.pkl"), 
+                  "vector_store", ["text_embedding"])
+
+# Process documents
+pdf_files = ["doc1.pdf", "doc2.pdf"]
+result = pipeline.run(file_paths=pdf_files)<br><br></code></pre>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="color: #667eea; margin-bottom: 1rem;">❓ Question Answering Pipeline</h3>
+                        <div class="code-example">
+                            <pre><code>from nodes.retriever.hybrid_retriever import HybridRetrieverNode
+from nodes.prompt.prompt_node import PromptNode
+from nodes.llm.openai import GPT3Node
+from storage.excel_storage import ExcelStorage
+
+# Create query pipeline
+query_pipeline = Pipeline()
+query_pipeline.add_node(TextEmbeddingNode(), "text_embedding", ["Query"])
+
+# Initialize hybrid retriever with BM25 + Vector search
+vector_store = VectorStoreNode("data/index.bin", "data/mapping.pkl")
+hybrid_retriever = HybridRetrieverNode(vector_store, top_k=3, alpha=0.5)
+hybrid_retriever.initialize_bm25(documents)  # documents from indexing
+
+query_pipeline.add_node(hybrid_retriever, "retriever", ["text_embedding"])
+query_pipeline.add_node(PromptNode(), "prompt_builder", ["retriever"])
+query_pipeline.add_node(GPT3Node(api_key="your-api-key"), "llm", ["prompt_builder"])
+
+# Ask questions
+answer = query_pipeline.run(query="What is PipelineRAG?")</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #e8f4fd; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #667eea;">
+                    <h4 style="color: #667eea; margin-bottom: 0.5rem;">
+                        <i class="fas fa-lightbulb"></i> Key Features Demonstrated
+                    </h4>
+                    <ul style="margin: 0; color: #666;">
+                        <li><strong>PipelineData:</strong> Unified data flow between all components</li>
+                        <li><strong>Modular Nodes:</strong> Each component handles one specific task</li>
+                        <li><strong>Simple Pipeline Construction:</strong> Just add nodes and define dependencies</li>
+                        <li><strong>Hybrid Retrieval:</strong> Combines BM25 and vector search for better results</li>
+                        <li><strong>Storage Integration:</strong> Optional Excel storage for debugging and analysis</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Paper Section -->
+        <section class="section">
+            <div class="container" style="text-align: center;">
+                <h2>Research Paper</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 2rem; color: #666;">
+                    Learn more about the research behind PipelineRAG
+                </p>
+                <div style="background: #f8f9ff; padding: 2rem; border-radius: 15px; margin: 2rem 0;">
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">
+                        "PipelineRAG: A Pipeline-Native Development Framework for Retrieval-Augmented Generation"
+                    </h3>
+                    <p style="margin-bottom: 1.5rem; color: #666;">
+                        This paper introduces PipelineRAG as a solution to the complexity issues found in existing RAG frameworks, 
+                        demonstrating significant improvements in developer experience and code simplicity.
+                    </p>
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <i class="fas fa-clock" style="color: #f39c12; margin-right: 0.5rem;"></i>
+                        <strong style="color: #e67e22;">Paper Status:</strong>
+                        <span style="color: #666;"> Currently under review. Will be made available after peer review completion.</span>
+                    </div>
+                    <button class="btn btn-primary" disabled style="opacity: 0.6; cursor: not-allowed;">
+                        <i class="fas fa-file-pdf"></i> Paper Under Review
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/MoranCoder95/PipelineRAG" title="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+<!--                <a href="#" title="Paper">-->
+<!--                    <i class="fas fa-file-alt"></i>-->
+<!--                </a>-->
+<!--                <a href="mailto:your-email@example.com" title="Contact">-->
+<!--                    <i class="fas fa-envelope"></i>-->
+<!--                </a>-->
+            </div>
+            <p>&copy; 2025 PipelineRAG. Released under MIT License.</p>
+            <p style="margin-top: 0.5rem; opacity: 0.7;">
+                A pipeline-native framework for building RAG applications
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all feature cards and sections
+        document.querySelectorAll('.feature-card, .section h2').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
