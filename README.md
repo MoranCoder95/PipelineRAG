@@ -1,316 +1,201 @@
-# Pipeline-RAG: 基于Pipeline架构的RAG系统框架
+# PipelineRAG - 模块化RAG系统
 
-Pipeline-RAG是一个用于构建检索增强生成(RAG)系统的框架，采用高度模块化的Pipeline架构设计。该框架允许你通过组合不同的功能节点来构建自定义的RAG应用，具有高度的灵活性和可扩展性。
+基于PipelineData统一数据结构的模块化检索增强生成(RAG)系统。
 
-## 核心特点
+## 📁 项目结构
 
-- **Pipeline架构**: 基于有向无环图(DAG)的pipeline设计，支持灵活的节点编排和流程控制
-- **模块化设计**: 所有功能都被封装为独立的Node，可以根据需求自由组合
-- **严格的参数传递**: 基于显式参数声明的节点间数据传递机制
-- **可扩展性**: 提供BaseComponent接口，轻松开发新的功能节点
-- **完整状态管理**: 包含Pipeline状态管理和错误处理机制
-
-## 架构设计
-
-### Pipeline核心架构
 ```
-Pipeline
-├── Graph Management (DiGraph)
-│   ├── Node Registration
-│   ├── Edge Management 
-│   └── Topology Sort
-├── Flow Control
-│   ├── Sequential Processing
-│   ├── Parallel Processing
-│   └── Conditional Branching
-└── State Management
-    ├── Input/Output Handling
-    └── Error Management
+PipelineRAG/
+├── pipeline_data.py              # 统一数据结构
+├── example_usage.py             # 使用示例
+├── nodes/                       # 处理节点
+│   ├── __init__.py
+│   ├── base.py                  # 基础组件类
+│   ├── document/                # 文档处理
+│   │   ├── __init__.py
+│   │   ├── pdf_processor.py     # PDF处理节点
+│   │   └── text_splitter.py     # 文本分割节点
+│   ├── embedding/               # 文本嵌入
+│   │   ├── __init__.py
+│   │   └── text_embedding.py    # 文本向量化节点
+│   ├── llm/                     # 大语言模型
+│   │   ├── __init__.py
+│   │   └── openai.py           # OpenAI接口节点
+│   ├── prompt/                  # 提示构建
+│   │   ├── __init__.py
+│   │   └── prompt_node.py      # 提示构建节点
+│   ├── retriever/               # 检索器
+│   │   ├── __init__.py
+│   │   ├── bm25_retriever.py   # BM25检索节点
+│   │   ├── hybrid_retriever.py # 混合检索节点
+│   │   └── vector_retriever.py # 向量检索节点
+│   └── vector/                  # 向量存储
+│       ├── __init__.py
+│       └── vector_store_node.py # 向量存储节点
+├── pipelines/                   # Pipeline管理
+│   ├── __init__.py
+│   ├── base.py                 # Pipeline基础类
+│   └── config.py               # 配置处理
+├── storage/                     # 存储接口
+│   ├── __init__.py
+│   ├── base.py                 # 存储基类
+│   └── excel_storage.py        # Excel存储实现
+└── utils/                       # 工具函数
 ```
 
-### Node基础框架
-```
-BaseComponent
-├── Interface
-│   ├── run()
-│   └── _dispatch_run()
-├── Configuration
-│   ├── set_config()
-│   └── get_config()
-└── Storage Interface
-    ├── save_output()
-    └── load_output()
-```
+## 🏗️ 核心架构
 
-## 节点定义和参数传递
-
-### 1. 基本节点结构
-
-所有节点必须继承自`BaseComponent`并实现`run`方法：
+### PipelineData 统一数据结构
 
 ```python
-from nodes.base import BaseComponent
-from typing import Dict, Optional, Tuple
-
-class CustomNode(BaseComponent):
-    def __init__(self, storage: Optional[BaseStorage] = None, **kwargs):
-        super().__init__(storage=storage)
-        self.kwargs = kwargs
-    
-    def run(self, param1: str, param2: list, **kwargs) -> Tuple[Dict, Optional[str]]:
-        # 处理逻辑
-        result = {
-            "output_key1": value1,
-            "output_key2": value2
-        }
-        return result, None
+@dataclass
+class PipelineData:
+    content: Any                    # 主要数据内容
+    metadata: Dict[str, Any]        # 元数据信息
+    source: Optional[str]           # 数据来源
 ```
 
-### 2. 参数传递机制
+### 组件化设计
 
-上下游节点间的参数传递需要严格匹配：
+- **BaseComponent**: 所有处理节点的基类
+- **Pipeline**: 管道编排和执行引擎
+- **Storage**: 可插拔的存储后端
 
-```python
-# 上游节点
-class UpstreamNode(BaseComponent):
-    def run(self, input_text: str, **kwargs) -> Tuple[Dict, Optional[str]]:
-        result = {
-            "processed_text": f"Processed: {input_text}",
-            "metadata": {"timestamp": "2024-01-01"}
-        }
-        return result, None
-
-# 下游节点 - 必须显式声明需要使用的参数
-class DownstreamNode(BaseComponent):
-    def run(self, 
-            processed_text: str,    # 匹配上游输出的processed_text
-            metadata: Dict,         # 匹配上游输出的metadata
-            **kwargs) -> Tuple[Dict, Optional[str]]:
-        return {"result": f"Final: {processed_text}"}, None
-```
-
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 安装依赖
 
 ```bash
-pip install -r requirements.txt
+pip install sentence-transformers faiss-cpu PyMuPDF openpyxl rank-bm25 jieba networkx
 ```
 
-### 2. 创建自定义Node
+
+### 2. 基本使用示例
+
+```python
+from pipeline_data import PipelineData
+from pipelines.base import Pipeline
+from nodes.document.pdf_processor import PDFProcessorNode
+from nodes.document.text_splitter import TextSplitterNode
+from nodes.embedding.text_embedding import TextEmbeddingNode
+from nodes.vector.vector_store_node import VectorStoreNode
+
+# 创建索引pipeline
+pipeline = Pipeline()
+pipeline.add_node(PDFProcessorNode(), "pdf_processor", ["File"])
+pipeline.add_node(TextSplitterNode(chunk_size=500), "text_splitter", ["pdf_processor"])
+pipeline.add_node(TextEmbeddingNode(), "text_embedding", ["text_splitter"])
+pipeline.add_node(VectorStoreNode("data/index.bin", "data/mapping.pkl"), "vector_store", ["text_embedding"])
+
+# 处理文档
+pdf_files = ["doc1.pdf", "doc2.pdf"]
+result = pipeline.run(file_paths=pdf_files)
+```
+
+## 🔧 主要特性
+
+### 1. 统一数据格式
+- 所有组件间使用PipelineData进行数据传递
+- 标准化的元数据管理
+- 便于调试和监控
+
+### 2. 模块化设计
+- 每个功能封装为独立节点
+- 可自由组合和替换组件
+- 支持复杂的处理流程
+
+### 3. 多种检索方式
+- **向量检索**: 基于语义相似度
+- **BM25检索**: 基于关键词匹配
+- **混合检索**: 结合两种方式的优点
+
+### 4. 灵活的存储后端
+- Excel存储：便于查看和分析
+- 可扩展其他存储方式
+
+### 5. 完整的RAG流程
+- 文档解析 → 文本分割 → 向量化 → 存储 → 检索 → 生成回答
+
+## 📝 核心组件说明
+
+### 文档处理
+- **PDFProcessorNode**: 提取PDF文本内容，保留文档结构
+- **TextSplitterNode**: 智能文本分割，支持重叠和上下文保持
+
+### 向量化
+- **TextEmbeddingNode**: 使用sentence-transformers生成文本向量
+- 支持中英文多语言模型
+
+### 检索
+- **VectorStoreNode**: FAISS向量存储和检索
+- **HybridRetrieverNode**: 混合检索，平衡语义和关键词匹配
+- **BM25RetrieverNode**: 传统关键词检索
+
+### 生成
+- **PromptNode**: 智能提示构建，格式化检索结果
+- **GPT3Node**: OpenAI API接口，支持多种模型
+
+## 🎯 使用场景
+
+1. **企业知识库**: 处理内部文档，提供智能问答
+2. **学术研究**: 分析大量论文和资料
+3. **客服系统**: 基于产品文档的自动回答
+4. **教育应用**: 构建课程内容问答系统
+
+
+## 🔍 监控和调试
+
+系统提供完整的执行链路跟踪：
+
+1. **数据流跟踪**: 每个节点的输入输出
+2. **元数据记录**: 处理统计和状态信息
+3. **存储记录**: 可选的Excel存储，便于分析
+4. **错误处理**: 详细的错误信息和恢复机制
+
+## 🚧 扩展开发
+
+### 添加新的处理节点
 
 ```python
 from nodes.base import BaseComponent
+from pipeline_data import PipelineData
 
-class TextProcessingNode(BaseComponent):
-    def __init__(self, storage: Optional[BaseStorage] = None):
-        super().__init__(storage=storage)
-        
-    def run(self, text: str, **kwargs) -> Tuple[Dict, Optional[str]]:
-        processed_text = text.upper()
-        return {"processed_text": processed_text}, None
-```
-
-### 3. 构建Pipeline
-
-```python
-from pipelines.base import Pipeline
-
-# 初始化pipeline
-pipeline = Pipeline()
-
-# 添加节点
-pipeline.add_node(component=pdf_processor, name="PDFProcessor", inputs=["File"])
-pipeline.add_node(component=text_splitter, name="TextSplitter", inputs=["PDFProcessor"])
-pipeline.add_node(component=embedding_node, name="TextEmbedding", inputs=["TextSplitter"])
-```
-
-### 4. 运行Pipeline
-
-```python
-# 运行pipeline
-result = pipeline.run(file_paths=["your_doc.pdf"])
-```
-
-## 内置节点类型
-
-### 1. 文档处理节点
-```python
-class PDFProcessorNode(BaseComponent):
-    def run(self, file_paths: List[str], **kwargs) -> Tuple[Dict, Optional[str]]:
-        result = {
-            "chunks": processed_chunks,
-            "metadata": file_metadata
-        }
-        return result, None
-```
-
-### 2. 文本分割节点
-```python
-class TextSplitterNode(BaseComponent):
-    def run(self, chunks: List[Dict], metadata: Dict, **kwargs) -> Tuple[Dict, Optional[str]]:
-        result = {
-            "text_chunks": split_chunks,
-            "chunk_count": len(split_chunks)
-        }
-        return result, None
-```
-
-### 3. 向量化节点
-```python
-class TextEmbeddingNode(BaseComponent):
-    def run(self, text_chunks: List[str], chunk_count: int, **kwargs) -> Tuple[Dict, Optional[str]]:
-        result = {
-            "embeddings": embedded_vectors,
-            "dimension": vector_dim
-        }
-        return result, None
-```
-
-## 示例应用
-
-### RAG系统示例
-
-1. 索引Pipeline
-```python
-# 文档索引pipeline
-indexing_pipeline = Pipeline()
-indexing_pipeline.add_node(component=pdf_processor, name="PDFProcessor", inputs=["File"])
-indexing_pipeline.add_node(component=text_splitter, name="TextSplitter", inputs=["PDFProcessor"])
-indexing_pipeline.add_node(component=embedding_node, name="TextEmbedding", inputs=["TextSplitter"])
-indexing_pipeline.add_node(component=vector_store, name="VectorStore", inputs=["TextEmbedding"])
-```
-
-2. 查询Pipeline
-```python
-# 查询pipeline
-query_pipeline = Pipeline()
-query_pipeline.add_node(component=embedding_node, name="TextEmbedding", inputs=["Query"])
-query_pipeline.add_node(component=vector_store, name="VectorRetrieval", inputs=["TextEmbedding"])
-query_pipeline.add_node(component=prompt_node, name="PromptBuilder", inputs=["VectorRetrieval"])
-query_pipeline.add_node(component=gpt_node, name="GPTNode", inputs=["PromptBuilder"])
-```
-
-## 高级特性
-
-### 1. 动态Pipeline构建
-```python
-pipeline_config = {
-    "nodes": [
-        {"name": "node1", "type": "ProcessorA", "inputs": ["input"]},
-        {"name": "node2", "type": "ProcessorB", "inputs": ["node1"]}
-    ]
-}
-pipeline = Pipeline.load_from_config(pipeline_config)
-```
-
-### 2. 条件分支
-```python
-pipeline.add_conditional_node(
-    component=decision_node,
-    conditions={"condition_a": "path_a", "condition_b": "path_b"}
-)
-```
-
-### 3. 并行处理
-```python
-pipeline.add_parallel_nodes([node1, node2, node3])
-```
-
-## 项目结构
-
-```
-pipeline-rag/
-├── nodes/                # 节点实现
-│   ├── base.py          # 基础组件接口
-│   ├── document/        # 文档处理节点
-│   ├── embedding/       # 向量化节点
-│   ├── llm/            # LLM接口节点
-│   ├── prompt/         # 提示词管理节点
-│   └── vector/         # 向量存储节点
-├── pipelines/           # Pipeline核心实现
-│   ├── base.py         # Pipeline基类
-│   └── config.py       # 配置管理
-├── storage/            # 存储实现
-│   ├── base.py        # 存储基类
-│   └── excel_storage.py # Excel存储实现
-└── examples/           # 示例应用
-    ├── demo1_rag_main.py # 命令行示例
-    └── ui.py           # Web界面示例
-```
-
-## 最佳实践
-
-### 1. 节点设计原则
-- 单一职责
-- 明确的输入输出接口
-- 完善的参数类型提示
-- 适当的错误处理
-
-### 2. 参数传递规范
-- 显式声明所需参数
-- 使用类型提示
-- 参数验证
-- 清晰的命名
-
-### 3. Pipeline设计模式
-- 合理的节点粒度
-- 清晰的数据流向
-- 有效的错误传播
-- 适当的并行处理
-
-### 4. 代码规范
-```python
-class WellDesignedNode(BaseComponent):
-    """节点功能描述
-    
-    Args:
-        param1 (str): 参数1的描述
-        param2 (List[str]): 参数2的描述
-    
-    Returns:
-        Tuple[Dict, Optional[str]]: 返回值描述
-    """
-    def run(self, param1: str, param2: List[str], **kwargs) -> Tuple[Dict, Optional[str]]:
-        # 参数验证
-        if not isinstance(param1, str):
-            raise TypeError("param1 must be string")
-        
+class CustomNode(BaseComponent):
+    def run(self, data: PipelineData, **kwargs) -> PipelineData:
         # 处理逻辑
-        result = self._process_data(param1, param2)
+        processed_content = self.process(data.content)
         
-        return {"output": result}, None
+        # 返回新的PipelineData
+        return PipelineData(
+            content=processed_content,
+            metadata={'node_type': 'custom_processing'},
+            source='CustomNode'
+        )
 ```
 
-## 注意事项
+### 添加新的存储后端
 
-1. 参数传递
-   - 确保上下游节点参数名称匹配
-   - 注意参数类型一致性
-   - 处理可选参数的默认值
+```python
+from storage.base import BaseStorage
 
-2. 错误处理
-   - 适当的异常捕获和传播
-   - 清晰的错误信息
-   - 完整的日志记录
+class CustomStorage(BaseStorage):
+    def save(self, data):
+        # 实现保存逻辑
+        pass
+    
+    def load(self):
+        # 实现加载逻辑
+        pass
+    
+    def close(self):
+        # 实现清理逻辑
+        pass
+```
 
-3. 性能优化
-   - 合理使用并行处理
-   - 优化数据传递
-   - 注意内存管理
+## 📊 性能优化
 
-## 许可证
+1. **向量索引**: 使用FAISS进行高效相似度搜索
+2. **文档缓存**: 避免重复处理已索引文档
+3. **批处理**: 支持批量向量化提升效率
+4. **增量更新**: 支持增量添加新文档
 
-Apache 2.0 License
-
-## 贡献指南
-
-1. Fork该项目
-2. 创建功能分支
-3. 提交代码
-4. 创建Pull Request
-
-## 联系方式
-
-- GitHub Issues
-- Email: liuyuforwh@gmail
