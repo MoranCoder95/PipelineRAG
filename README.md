@@ -57,7 +57,7 @@ class PipelineData:
 
 ### 组件化设计
 
-- **BaseComponent**: 所有处理节点的基类
+- **BaseNode**: 所有处理节点的基类
 - **Pipeline**: 管道编排和执行引擎
 - **Storage**: 可插拔的存储后端
 
@@ -157,10 +157,10 @@ result = pipeline.run(file_paths=pdf_files)
 ### 添加新的处理节点
 
 ```python
-from nodes.base import BaseComponent
+from nodes.base import BaseNode
 from pipeline_data import PipelineData
 
-class CustomNode(BaseComponent):
+class CustomNode(BaseNode):
     def run(self, data: PipelineData, **kwargs) -> PipelineData:
         # 处理逻辑
         processed_content = self.process(data.content)

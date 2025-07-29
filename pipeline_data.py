@@ -1,26 +1,3 @@
-# # 1. 统一的数据结构
-# from dataclasses import dataclass, field
-# from typing import Any, Dict, Optional, List, Tuple
-# import logging
-#
-# logger = logging.getLogger(__name__)
-#
-#
-# @dataclass
-# class PipelineData:
-#     """统一的Pipeline数据格式"""
-#     content: Any  # 主要数据内容
-#     metadata: Dict[str, Any] = field(default_factory=dict)  # 元数据
-#     source: Optional[str] = None  # 数据来源
-#
-#     def to_dict(self) -> Dict:
-#         """转换为字典格式"""
-#         return {
-#             'content': self.content,
-#             'metadata': self.metadata,
-#             'source': self.source
-#         }
-
 # pipeline_data.py
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
